@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { slideInLeft, slideInRight } from '../utils/animations';
 import { supabase } from '../lib/supabase';
 
@@ -9,6 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
   
   const leftRef = useRef(null);
@@ -22,18 +23,36 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
+
+    const timeout = setTimeout(() => {
+        if (loading) {
+            setLoading(false);
+            setErrorMsg("Koneksi lambat. Silakan coba lagi.");
+        }
+    }, 10000);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-      navigate('/');
+      if (data.session) {
+        clearTimeout(timeout); 
+        navigate('/');
+      }
       
     } catch (error: any) {
-      alert('Login Gagal: ' + (error.message || 'Periksa email dan password Anda.'));
+      clearTimeout(timeout);
+      console.error("Login Error:", error.message);
+      
+      let pesan = error.message;
+      if (pesan.includes("Invalid login credentials")) pesan = "Email atau password salah.";
+      if (pesan.includes("Email not confirmed")) pesan = "Email belum diverifikasi. Cek inbox Anda.";
+      
+      setErrorMsg(pesan);
     } finally {
       setLoading(false);
     }
@@ -51,21 +70,18 @@ export default function Login() {
             Temukan mitra terverifikasi untuk perbaikan, kebersihan, hingga
             renovasi. Aman, transparan, dan bergaransi.
           </p>
-          <div className="flex gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">1500+</div>
-              <p className="text-gray-600">Mitra Terverifikasi</p>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">25K+</div>
-              <p className="text-gray-600">Pekerjaan Selesai</p>
-            </div>
-          </div>
         </div>
 
         <div ref={formRef} className="bg-white rounded-2xl shadow-lg p-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Log In</h2>
           <p className="text-gray-600 mb-6">Masuk untuk melanjutkan</p>
+
+          {errorMsg && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2 text-sm">
+                <AlertCircle size={18} />
+                {errorMsg}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
@@ -112,29 +128,19 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
             >
-              {loading ? 'Memproses...' : 'Login'}
+              {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memproses...
+                  </>
+              ) : 'Login'}
             </button>
           </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Atau masuk dengan</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <button className="border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">
-              Google
-            </button>
-            <button className="border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">
-              Facebook
-            </button>
-          </div>
 
           <p className="text-center text-gray-600 mt-6">
             Belum punya akun?{' '}
