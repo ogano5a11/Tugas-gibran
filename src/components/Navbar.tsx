@@ -1,20 +1,21 @@
 import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut } from 'lucide-react';
-import AuthContext from '../contexts/AuthContext';
+import { Menu, X, LogOut, User } from 'lucide-react';
+import { AuthContext } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
   const user = authContext?.user;
-  const setUser = authContext?.setUser;
+  const signOut = authContext?.signOut;
 
-  const handleLogout = () => {
-    if (setUser) {
-      setUser(null);
+  const handleLogout = async () => {
+    if (signOut) {
+      await signOut();
+      navigate('/');
+      setIsMenuOpen(false);
     }
-    navigate('/');
   };
 
   return (
@@ -25,6 +26,7 @@ export default function Navbar() {
             <h1 className="text-2xl font-bold text-gray-900">Beres.in</h1>
           </Link>
 
+          {/* Menu Desktop */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-gray-700 hover:text-green-600 transition-colors">
               Home
@@ -40,18 +42,21 @@ export default function Navbar() {
             </Link>
 
             {user ? (
-              <div className="flex items-center gap-4">
-                <span className="text-gray-700">{user.name}</span>
+              <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
+                <div className="flex items-center gap-2 text-gray-700 font-medium">
+                  <User size={18} className="text-green-600" />
+                  <span>{user.name || user.email?.split('@')[0]}</span>
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="text-red-600 hover:text-red-700 font-medium transition-colors flex items-center gap-2"
+                  className="text-red-600 hover:text-red-700 font-medium transition-colors flex items-center gap-1 text-sm bg-red-50 px-3 py-1.5 rounded-full"
                 >
-                  <LogOut size={18} />
+                  <LogOut size={16} />
                   Logout
                 </button>
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-3">
                 <Link
                   to="/register"
                   className="text-green-600 hover:text-green-700 font-medium transition-colors"
@@ -60,18 +65,19 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/login"
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
                 >
                   Login
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
+          {/* Tombol Menu Mobile */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-green-600"
+              className="text-gray-700 hover:text-green-600 p-2"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -79,44 +85,52 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Menu Mobile Dropdown */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t">
-          <div className="px-4 pt-2 pb-4 space-y-3">
-            <Link to="/" className="block text-gray-700 hover:text-green-600 py-2">
+        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg absolute w-full">
+          <div className="px-4 pt-2 pb-4 space-y-2">
+            <Link to="/" className="block text-gray-700 hover:text-green-600 py-3 border-b border-gray-50">
               Home
             </Link>
-            <Link to="/about" className="block text-gray-700 hover:text-green-600 py-2">
+            <Link to="/about" className="block text-gray-700 hover:text-green-600 py-3 border-b border-gray-50">
               About Us
             </Link>
-            <Link to="/kategori" className="block text-gray-700 hover:text-green-600 py-2">
+            <Link to="/kategori" className="block text-gray-700 hover:text-green-600 py-3 border-b border-gray-50">
               Layanan Kami
             </Link>
-            <Link to="/bantuan" className="block text-gray-700 hover:text-green-600 py-2">
+            <Link to="/bantuan" className="block text-gray-700 hover:text-green-600 py-3 border-b border-gray-50">
               Bantuan
             </Link>
 
             {user ? (
-              <>
-                <div className="py-2 text-gray-700">{user.name}</div>
+              <div className="pt-4 space-y-3">
+                <div className="flex items-center gap-2 text-gray-900 font-bold px-2">
+                  <User size={20} className="text-green-600" />
+                  {user.name}
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left text-red-600 hover:text-red-700 font-medium py-2"
+                  className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-medium py-3 rounded-lg"
                 >
-                  Logout
+                  <LogOut size={18} />
+                  Keluar Akun
                 </button>
-              </>
+              </div>
             ) : (
-              <>
-                <Link to="/register" className="block text-green-600 font-medium py-2">
+              <div className="pt-4 grid grid-cols-2 gap-3">
+                <Link 
+                  to="/register" 
+                  className="block text-center text-green-600 font-medium py-2 border border-green-600 rounded-lg"
+                >
                   Daftar
                 </Link>
                 <Link
                   to="/login"
-                  className="block w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors text-center"
+                  className="block text-center bg-green-600 text-white font-medium py-2 rounded-lg shadow-sm"
                 >
                   Login
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>

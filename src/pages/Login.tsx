@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useContext } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { fadeInUp, slideInLeft, slideInRight } from '../utils/animations';
-import AuthContext from '../contexts/AuthContext';
+import { slideInLeft, slideInRight } from '../utils/animations';
+import { supabase } from '../lib/supabase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,7 +10,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useContext(AuthContext) || {};
+  
   const leftRef = useRef(null);
   const formRef = useRef(null);
 
@@ -23,18 +23,20 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      if (setUser) {
-        setUser({
-          id: '1',
-          email,
-          name: email.split('@')[0],
-          role: 'customer',
-        });
-      }
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
       navigate('/');
+      
+    } catch (error: any) {
+      alert('Login Gagal: ' + (error.message || 'Periksa email dan password Anda.'));
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -63,12 +65,12 @@ export default function Login() {
 
         <div ref={formRef} className="bg-white rounded-2xl shadow-lg p-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Log In</h2>
-          <p className="text-gray-600 mb-6">No Instagram/Facebook/Email</p>
+          <p className="text-gray-600 mb-6">Masuk untuk melanjutkan</p>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email atau Nomor HP
+                Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
@@ -76,7 +78,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder="nama@email.com"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   required
                 />
@@ -110,9 +112,9 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
+              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Loading...' : 'Login'}
+              {loading ? 'Memproses...' : 'Login'}
             </button>
           </form>
 
@@ -121,15 +123,15 @@ export default function Login() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Atau</span>
+              <span className="px-2 bg-white text-gray-500">Atau masuk dengan</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <button className="border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">
               Google
             </button>
-            <button className="border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+            <button className="border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">
               Facebook
             </button>
           </div>

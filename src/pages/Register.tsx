@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useContext } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, Phone, Eye, EyeOff } from 'lucide-react';
-import { fadeInUp, slideInLeft, slideInRight } from '../utils/animations';
-import AuthContext from '../contexts/AuthContext';
+import { slideInLeft, slideInRight } from '../utils/animations';
+import { supabase } from '../lib/supabase';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -16,8 +16,8 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<'customer' | 'partner'>('customer');
+  
   const navigate = useNavigate();
-  const { setUser } = useContext(AuthContext) || {};
   const leftRef = useRef(null);
   const formRef = useRef(null);
 
@@ -28,24 +28,36 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (formData.password !== formData.confirmPassword) {
       alert('Password tidak cocok');
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      if (setUser) {
-        setUser({
-          id: '1',
-          email: formData.email,
-          name: formData.name,
-          role,
-        });
-      }
-      navigate('/');
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            phone: formData.phone,
+            role: role,
+          },
+        },
+      });
+
+      if (error) throw error;
+      alert('Registrasi berhasil! Cek email Anda untuk verifikasi (jika diaktifkan) atau silakan login.');
+      navigate('/login');
+
+    } catch (error: any) {
+      alert(error.message || 'Terjadi kesalahan saat registrasi');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -68,6 +80,7 @@ export default function Register() {
           <div className="flex gap-4 mb-6">
             <button
               onClick={() => setRole('customer')}
+              type="button"
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                 role === 'customer'
                   ? 'bg-green-600 text-white'
@@ -78,6 +91,7 @@ export default function Register() {
             </button>
             <button
               onClick={() => setRole('partner')}
+              type="button"
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                 role === 'partner'
                   ? 'bg-green-600 text-white'
@@ -99,7 +113,7 @@ export default function Register() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="John Doe"
+                  placeholder="Nama Lengkap Anda"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   required
                 />
@@ -116,7 +130,7 @@ export default function Register() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="your@email.com"
+                  placeholder="nama@email.com"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   required
                 />
@@ -153,6 +167,7 @@ export default function Register() {
                   placeholder="••••••••"
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -191,9 +206,9 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
+              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Loading...' : 'Daftar'}
+              {loading ? 'Memproses...' : 'Daftar Sekarang'}
             </button>
           </form>
 
