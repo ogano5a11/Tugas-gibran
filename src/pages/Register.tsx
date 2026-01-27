@@ -106,7 +106,7 @@ export default function Register() {
                   : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Mitra
+              Admin
             </button>
           </div>
 

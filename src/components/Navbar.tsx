@@ -49,7 +49,7 @@ export default function Navbar() {
                 className="flex items-center gap-1 text-green-700 hover:text-green-800 font-medium transition-colors border border-green-600 px-3 py-1 rounded-full bg-green-50"
               >
                 <LayoutDashboard size={16} />
-                Dashboard Mitra
+                Dashboard Admin
               </Link>
             )}
 
@@ -122,7 +122,7 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 <LayoutDashboard size={20} />
-                Dashboard Mitra
+                Dashboard Admin
               </Link>
             )}
 

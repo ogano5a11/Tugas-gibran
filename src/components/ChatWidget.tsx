@@ -71,7 +71,7 @@ export default function ChatWidget() {
 
     try {
       // KIRIM KE PHP
-      const response = await fetch('http://localhost/beres-api/send_message.php', {
+      const response = await fetch('http://localhost/beres-api/send_messages.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
